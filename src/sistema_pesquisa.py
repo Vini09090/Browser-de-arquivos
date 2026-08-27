@@ -11,8 +11,23 @@ class Pesquisa:
         self.pesquisa = ""
         self.resultados = []
 
+    def normalizar_texto(self,texto: str) -> str:
+        texto = texto.lower().strip()
+
+        texto = unicodedata.normalize("NFD", texto)
+
+        texto = "".join(
+            caractere
+            for caractere in texto
+            if unicodedata.category(caractere) != "Mn"
+        )
+
+        texto = texto.replace(" ", "")
+
+        return texto
+        
     def buscar_livros_locais(self, termo: str) -> list:
-        termo = termo.strip().lower()
+        termo = self.normalizar_texto(termo)
 
         if not termo or not os.path.isdir(self.pasta_livros):
             return []
@@ -21,8 +36,11 @@ class Pesquisa:
 
         for raiz, _, arquivos in os.walk(self.pasta_livros):
             for arquivo in arquivos:
+
+                nome_arquivo = self.normalizar_texto(arquivo)
+
                 if (
-                    termo in arquivo.lower()
+                    termo in nome_arquivo
                     and arquivo.lower().endswith(self.EXTENSOES)
                 ):
                     resultados.append({
