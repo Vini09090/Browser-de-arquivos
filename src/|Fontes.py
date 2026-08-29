@@ -350,7 +350,7 @@ class BuscadorDeLivros:
         return {"fonte": "Wikisource", "resultados": resultados}
 
     
-    def buscar_em_todas(self, title: str, limit: int = 10, headless: bool = True) -> list:
+    def main(self, title: str, limit: int = 10, headless: bool = True) -> list:
             
             """Executa todas as buscas em sequência chamando os métodos com self."""
             resultados = [
@@ -363,14 +363,6 @@ class BuscadorDeLivros:
             self.WikiSource(titulo= title , limite= limit)]
         
             return resultados
-
-    
-    def main(self, title:str , limit: int = 10 , headless: bool = True):
-        resultados_totais = []
-        for fonte in self.fontes:
-            resultado = fonte.buscar(titulo= title, limite=limit, headless=headless)
-            resultados_totais.append(resultado)
-        return resultados_totais
 
 
 if __name__ == "__main__":
