@@ -2,17 +2,14 @@ import os
 import customtkinter as ctk
 from Brain import Livros
 
-class Livros():
-    def __init__(self):
-        pass
-PASTA_BIBLIOTECA = "/home/vinicius/Biblioteca"
 
+PASTA_BIBLIOTECA = "/home/vinicius/Biblioteca"
 
 class TelaSecundaria(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
 
-        self.geometry("550x550")
+        self.geometry("600x580")
         self.title("Alexandria - Anotações")
 
         self.livros = Livros()
@@ -25,29 +22,34 @@ class TelaSecundaria(ctk.CTkToplevel):
 
         self.nome_arquivo = ctk.CTkEntry(
             self,
-            width=300,
-            placeholder_text="Nome da Nota"
+            width=320,
+            height= 35,
+            placeholder_text="Título da Nota"
         )
         self.nome_arquivo.pack(pady=10)
 
         self.entrada_nota = ctk.CTkTextbox(
             self,
-            width=420,
-            height=220
+            width=490,
+            height=270
         )
         self.entrada_nota.pack(pady=10)
+        self.frame_botoes = ctk.CTkFrame(self, fg_color="transparent")
+        self.frame_botoes.pack(pady=10)
 
         ctk.CTkButton(
-            self,
+            self.frame_botoes,
             text="Salvar Nota",
-            command=self.salvar_nota
-        ).pack(pady=10)
+            command=self.salvar_nota,
+            fg_color="#004DD3"
+        ).pack(side="left", padx=10)
 
         ctk.CTkButton(
-            self,
+            self.frame_botoes,
             text="Converter para PDF",
-            command=self.exportar_pdf
-        ).pack(pady=10)
+            command=self.exportar_pdf,
+            fg_color="#004DD3"
+        ).pack(side="left", padx=10)
 
         self.label_status = ctk.CTkLabel(self, text="")
         self.label_status.pack(pady=10)
@@ -109,3 +111,9 @@ class TelaSecundaria(ctk.CTkToplevel):
             self.label_status.configure(
                 text="Erro ao gerar PDF."
             )
+
+
+
+if __name__ == "__main__":
+    app = TelaSecundaria()
+    app.mainloop()
