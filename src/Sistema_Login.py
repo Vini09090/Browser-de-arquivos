@@ -1,34 +1,90 @@
 import customtkinter as ctk
-from PIL import Image
 from app import App
+from Renderizador import GerenciadorImagem
+
 import os
+from pathlib import Path
+from random import shuffle
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+PASTA_IMAGENS = BASE_DIR / "Imagens"
+
+EXTENSOES_IMAGEM = (
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".bmp"
+)
+
+
+def listar_imagens(diretorio):
+    """
+    Retorna somente arquivos que podem ser utilizados
+    como imagens de fundo.
+    """
+
+    if not diretorio.exists():
+        return []
+
+    imagens = []
+
+    for arquivo in diretorio.iterdir():
+
+        if arquivo.is_file() and arquivo.suffix.lower() in EXTENSOES_IMAGEM:
+            imagens.append(arquivo)
+
+    shuffle(imagens)
+
+    return imagens
+
 
 class Keys_login:
     """Gerencia os usuários através do arquivo usuarios.txt."""
 
-    def __init__(self, arquivo_usuarios="usuarios.txt"):
-        self.arquivo_usuarios = arquivo_usuarios
+    def __init__(self, arquivo_usuarios=None):
 
-        # Cria o arquivo caso ele ainda não exista
+        if arquivo_usuarios is None:
+            arquivo_usuarios = BASE_DIR / "usuarios.txt"
+
+        self.arquivo_usuarios = Path(arquivo_usuarios)
+
         self.criar_arquivo()
 
-    def criar_arquivo(self):
-        """Cria o arquivo de usuários e adiciona o administrador inicial."""
+    # --------------------------------------------------------
 
-        if not os.path.exists(self.arquivo_usuarios):
-            with open(self.arquivo_usuarios, "w", encoding="utf-8") as arquivo:
+    def criar_arquivo(self):
+        """Cria o arquivo de usuários caso ele não exista."""
+
+        if not self.arquivo_usuarios.exists():
+
+            with open(
+                self.arquivo_usuarios,
+                "w",
+                encoding="utf-8"
+            ) as arquivo:
+
                 arquivo.write("admin:200604\n")
+
+    # --------------------------------------------------------
 
     def verificar_usuario(self, usuario):
         """
         Verifica se determinado usuário já existe.
-        Retorna:
-            True  -> usuário existe
-            False -> usuário não existe"""
+
+        True  -> usuário existe
+        False -> usuário não existe
+        """
 
         usuario = usuario.strip()
 
-        with open(self.arquivo_usuarios, "r", encoding="utf-8") as arquivo:
+        with open(
+            self.arquivo_usuarios,
+            "r",
+            encoding="utf-8"
+        ) as arquivo:
 
             for linha in arquivo:
 
@@ -39,6 +95,7 @@ class Keys_login:
 
                 try:
                     usuario_salvo, senha_salva = linha.split(":", 1)
+
                 except ValueError:
                     continue
 
@@ -49,16 +106,23 @@ class Keys_login:
 
         return False
 
+    # --------------------------------------------------------
+
     def verificar_login(self, usuario, senha):
         """
-        Verifica usuário e senha no arquivo usuarios.txt.
-        Retorna:
-            True  -> login correto
-            False -> login incorreto"""
+        Verifica usuário e senha.
+
+        True  -> login correto
+        False -> login incorreto
+        """
 
         usuario = usuario.strip()
 
-        with open(self.arquivo_usuarios, "r", encoding="utf-8") as arquivo:
+        with open(
+            self.arquivo_usuarios,
+            "r",
+            encoding="utf-8"
+        ) as arquivo:
 
             for linha in arquivo:
 
@@ -69,62 +133,102 @@ class Keys_login:
 
                 try:
                     usuario_salvo, senha_salva = linha.split(":", 1)
+
                 except ValueError:
                     continue
 
                 usuario_salvo = usuario_salvo.strip()
                 senha_salva = senha_salva.strip()
 
-                if usuario == usuario_salvo and senha == senha_salva:
+                if (
+                    usuario == usuario_salvo
+                    and senha == senha_salva
+                ):
                     return True
 
         return False
 
+    # --------------------------------------------------------
+
     def adicionar_conta(self, usuario, senha):
-        """Adiciona um novo usuário ao arquivo."""
+        """Adiciona um novo usuário."""
 
         usuario = usuario.strip()
+
         if not usuario or not senha:
             return False
 
-        # Verifica se o usuário já existe
         if self.verificar_usuario(usuario):
             return False
 
-        with open(self.arquivo_usuarios, "a", encoding="utf-8") as arquivo:
+        with open(
+            self.arquivo_usuarios,
+            "a",
+            encoding="utf-8"
+        ) as arquivo:
+
             arquivo.write(f"{usuario}:{senha}\n")
 
         return True
 
+
+
 class TelaLogin(ctk.CTk):
 
     def __init__(self):
+
         super().__init__()
 
-        self.geometry("1200x800")
-        self.title("Alexandria - Login")
-        self.resizable(False, False)
-        self.configure(fg_color="#0b0b0b")
+        # ----------------------------------------------------
+        # JANELA
+        # ----------------------------------------------------
 
-        # Sistema responsável pelos usuários
+        self.geometry("1150x790")
+        self.minsize(900, 650)
+
+        self.title("Alexandria - Login")
+
+        # Agora permitimos redimensionamento
+        self.resizable(True, True)
+
+        self.configure(
+            fg_color="#0b0b0b"
+        )
+
+        # ----------------------------------------------------
+        # USUÁRIOS
+        # ----------------------------------------------------
+
         self.confirmar_usuario = Keys_login()
 
-        # -----------------------------------------
-        # IMAGEM DE FUNDO
+        # ----------------------------------------------------
+        # IMAGENS
+        # ----------------------------------------------------
 
-        imagem = Image.open(
-            "/home/vinicius/Alexandria1.0/Imagens/Fundo_mar.jpeg"
+        self.imagens = listar_imagens(
+            PASTA_IMAGENS
         )
 
-        self.wallpaper = ctk.CTkImage(
-            light_image=imagem,
-            dark_image=imagem,
-            size=(1200, 800)
+        if not self.imagens:
+
+            raise FileNotFoundError(
+                f"Nenhuma imagem encontrada em:\n{PASTA_IMAGENS}"
+            )
+
+        # Escolhe a primeira imagem aleatória
+        self.caminho_fundo = self.imagens[0]
+
+        # Cria o gerenciador usando a imagem ORIGINAL
+        self.gerenciador_imagem = GerenciadorImagem(
+            self.caminho_fundo
         )
+
+        # ----------------------------------------------------
+        # FUNDO
+        # ----------------------------------------------------
 
         self.fundo = ctk.CTkLabel(
             self,
-            image=self.wallpaper,
             text=""
         )
 
@@ -135,8 +239,18 @@ class TelaLogin(ctk.CTk):
             relheight=1
         )
 
-        # -----------------------------------------
+        # Guarda a referência da imagem
+        self.wallpaper = None
+
+        # Atualiza o fundo quando a janela mudar
+        self.bind(
+            "<Configure>",
+            self.atualizar_fundo
+        )
+
+        # ----------------------------------------------------
         # PAINEL
+        # ----------------------------------------------------
 
         self.painel = ctk.CTkFrame(
             self,
@@ -153,21 +267,27 @@ class TelaLogin(ctk.CTk):
             rely=0.5,
             anchor="w"
         )
+
         self.painel.pack_propagate(False)
 
-        # -----------------------------------------
+        # ----------------------------------------------------
         # TÍTULO
+        # ----------------------------------------------------
 
         self.titulo = ctk.CTkLabel(
             self.painel,
             text="ALEXANDRIA",
             font=("Arial", 42, "bold"),
-            text_color="white"
+            text_color="#ffffff"
         )
-        self.titulo.pack(pady=(50, 10))
 
-        # -----------------------------------------
+        self.titulo.pack(
+            pady=(50, 10)
+        )
+
+        # ----------------------------------------------------
         # SUBTÍTULO
+        # ----------------------------------------------------
 
         self.subtitulo = ctk.CTkLabel(
             self.painel,
@@ -175,10 +295,14 @@ class TelaLogin(ctk.CTk):
             font=("Arial", 14),
             text_color="#bdbdbd"
         )
-        self.subtitulo.pack(pady=(0, 45))
 
-        # -----------------------------------------
+        self.subtitulo.pack(
+            pady=(0, 45)
+        )
+
+        # ----------------------------------------------------
         # USUÁRIO
+        # ----------------------------------------------------
 
         self.entrada_usuario = ctk.CTkEntry(
             self.painel,
@@ -189,11 +313,14 @@ class TelaLogin(ctk.CTk):
             font=("Arial", 16)
         )
 
-        self.entrada_usuario.pack(pady=13)
+        self.entrada_usuario.pack(
+            pady=13
+        )
 
-        # -----------------------------------------
+        # ----------------------------------------------------
         # SENHA
-        
+        # ----------------------------------------------------
+
         self.entrada_senha = ctk.CTkEntry(
             self.painel,
             width=300,
@@ -204,11 +331,13 @@ class TelaLogin(ctk.CTk):
             font=("Arial", 16)
         )
 
-        self.entrada_senha.pack(pady=13)
+        self.entrada_senha.pack(
+            pady=13
+        )
 
-        # -----------------------------------------
+        # ----------------------------------------------------
         # BOTÃO LOGIN
-        
+        # ----------------------------------------------------
 
         self.botao_login = ctk.CTkButton(
             self.painel,
@@ -217,33 +346,48 @@ class TelaLogin(ctk.CTk):
             height=50,
             corner_radius=15,
             font=("Arial", 18, "bold"),
+
             fg_color="#2563EB",
             hover_color="#1D4ED8",
+
             command=self.verificar_login
         )
-        self.botao_login.pack(pady=(30, 15))
 
-        # -----------------------------------------
-        # BOTÃO CRIAR CONTA
-        
+        self.botao_login.pack(
+            pady=(30, 15)
+        )
+
+        # ----------------------------------------------------
+        # CRIAR CONTA
+        # ----------------------------------------------------
+
         self.botao_criar_conta = ctk.CTkButton(
             self.painel,
             text="Criar Conta",
             width=220,
             height=40,
             corner_radius=20,
+
             fg_color="transparent",
+
             border_width=1,
             border_color="#7AF065",
+
             text_color="#39FF14",
+
             hover_color="#1a1a1a",
+
             command=self.criar_conta
         )
 
-        self.botao_criar_conta.pack(pady=(0, 20))
+        self.botao_criar_conta.pack(
+            pady=(0, 20)
+        )
 
-        # -----------------------------------------
+        # ----------------------------------------------------
         # STATUS
+        # ----------------------------------------------------
+
         self.label_status = ctk.CTkLabel(
             self.painel,
             text="",
@@ -252,8 +396,9 @@ class TelaLogin(ctk.CTk):
 
         self.label_status.pack()
 
-        # -----------------------------------------
+        # ----------------------------------------------------
         # RODAPÉ
+        # ----------------------------------------------------
 
         self.footer = ctk.CTkLabel(
             self.painel,
@@ -266,8 +411,55 @@ class TelaLogin(ctk.CTk):
             side="bottom",
             pady=18
         )
-    # =====================================================
-    # LOGIN
+
+        # ----------------------------------------------------
+        # PRIMEIRA RENDERIZAÇÃO
+        # ----------------------------------------------------
+
+        self.after(
+            100,
+            self.atualizar_fundo
+        )
+
+  
+
+    def atualizar_fundo(self, event=None):
+        """
+        Redimensiona a imagem usando SEMPRE a imagem original.
+
+        Isso evita perda de qualidade causada por múltiplos
+        redimensionamentos.
+        """
+
+        largura = self.winfo_width()
+        altura = self.winfo_height()
+
+        if largura <= 1 or altura <= 1:
+            return
+
+        imagem = self.gerenciador_imagem.preparar(
+            largura,
+            altura,
+
+            # Ajustes visuais
+            brilho=0.80,
+            saturacao=0.90
+        )
+
+        self.wallpaper = ctk.CTkImage(
+            light_image=imagem,
+            dark_image=imagem,
+            size=(largura, altura)
+        )
+
+        self.fundo.configure(
+            image=self.wallpaper
+        )
+
+        # Mantém o fundo atrás do painel
+        self.fundo.lower()
+
+  
 
     def verificar_login(self):
 
@@ -283,7 +475,10 @@ class TelaLogin(ctk.CTk):
 
             return
 
-        if self.confirmar_usuario.verificar_login(usuario, senha):
+        if self.confirmar_usuario.verificar_login(
+            usuario,
+            senha
+        ):
 
             self.label_status.configure(
                 text="Login realizado.",
@@ -299,7 +494,8 @@ class TelaLogin(ctk.CTk):
                 text_color="#ff4444"
             )
 
-    # CRIAR CONTA
+   
+
     def criar_conta(self):
 
         usuario = self.entrada_usuario.get().strip()
@@ -314,7 +510,6 @@ class TelaLogin(ctk.CTk):
 
             return
 
-        # Tenta adicionar a conta
         conta_criada = self.confirmar_usuario.adicionar_conta(
             usuario,
             senha
@@ -327,9 +522,15 @@ class TelaLogin(ctk.CTk):
                 text_color="#00ff88"
             )
 
-            # Limpa os campos
-            self.entrada_usuario.delete(0, "end")
-            self.entrada_senha.delete(0, "end")
+            self.entrada_usuario.delete(
+                0,
+                "end"
+            )
+
+            self.entrada_senha.delete(
+                0,
+                "end"
+            )
 
         else:
 
@@ -338,10 +539,14 @@ class TelaLogin(ctk.CTk):
                 text_color="#ff4444"
             )
 
+
     def abrir_programa(self):
 
         self.withdraw()
-        app = App(master=self)
+
+        app = App(
+            master=self
+        )
 
         def ao_fechar():
 
@@ -352,10 +557,14 @@ class TelaLogin(ctk.CTk):
             "WM_DELETE_WINDOW",
             ao_fechar
         )
+
         app.mainloop()
 
-#iniciação 
+
+
 
 if __name__ == "__main__":
+
     app = TelaLogin()
+
     app.mainloop()
