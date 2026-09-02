@@ -1,5 +1,4 @@
 import customtkinter as ctk
-
 from sistema_pesquisa import Pesquisa
 from TelaExibição import Tela_exibição
 
@@ -8,7 +7,7 @@ class TelaPesquisa(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
 
-        self.geometry("600x350")
+        self.geometry("800x650")
         self.title("Alexandria - Pesquisar Livros")
 
         self.pesquisa = Pesquisa()
@@ -19,19 +18,48 @@ class TelaPesquisa(ctk.CTkToplevel):
             font=("Arial", 24)
         ).pack(pady=20)
 
-        self.entrada_pesquisa = ctk.CTkEntry(
+
+        self.area_pesquisa = ctk.CTkFrame(
             self,
-            width=400,
-            placeholder_text="Digite o nome do livro"
+            fg_color="transparent"
         )
-        self.entrada_pesquisa.pack(pady=20)
+
+        self.area_pesquisa.pack(
+            pady=30
+        )
+
+
+        self.entrada_pesquisa = ctk.CTkEntry(
+            self.area_pesquisa,
+            width=400,
+            height=50,
+            corner_radius=15,
+            placeholder_text="Digite o nome do livro",
+            font=("Arial", 15)
+        )
+
+        self.entrada_pesquisa.grid(
+            row=0,
+            column=0,
+            padx=(0, 10)
+        )
 
         self.botao_pesquisar = ctk.CTkButton(
-            self,
+            self.area_pesquisa,
             text="Pesquisar",
-            command=self.realizar_pesquisa
+            width=130,
+            height=50,
+            corner_radius=15,
+            command=self.realizar_pesquisa,
+            fg_color="#004DD3",
+            hover_color="#003AA3",
+            font=("Arial", 15, "bold")
         )
-        self.botao_pesquisar.pack(pady=15)
+
+        self.botao_pesquisar.grid(
+            row=0,
+            column=1
+        )
 
         self.label_status = ctk.CTkLabel(
             self,
