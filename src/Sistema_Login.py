@@ -1,14 +1,11 @@
 import customtkinter as ctk
 from app import App
 from Renderizador import GerenciadorImagem
-
-import os
 from pathlib import Path
 from random import shuffle
-
+from .Nova_conta import Criar_conta
 
 BASE_DIR = Path(__file__).resolve().parent
-
 PASTA_IMAGENS = BASE_DIR / "Imagens"
 
 EXTENSOES_IMAGEM = (
@@ -170,7 +167,6 @@ class Keys_login:
             arquivo.write(f"{usuario}:{senha}\n")
 
         return True
-
 
 
 class TelaLogin(ctk.CTk):
@@ -421,7 +417,6 @@ class TelaLogin(ctk.CTk):
             self.atualizar_fundo
         )
 
-  
 
     def atualizar_fundo(self, event=None):
         """
@@ -460,7 +455,6 @@ class TelaLogin(ctk.CTk):
         self.fundo.lower()
 
   
-
     def verificar_login(self):
 
         usuario = self.entrada_usuario.get().strip()
@@ -494,51 +488,8 @@ class TelaLogin(ctk.CTk):
                 text_color="#ff4444"
             )
 
-   
-
     def criar_conta(self):
-
-        usuario = self.entrada_usuario.get().strip()
-        senha = self.entrada_senha.get()
-
-        if not usuario or not senha:
-
-            self.label_status.configure(
-                text="Preencha usuário e senha.",
-                text_color="#ff4444"
-            )
-
-            return
-
-        conta_criada = self.confirmar_usuario.adicionar_conta(
-            usuario,
-            senha
-        )
-
-        if conta_criada:
-
-            self.label_status.configure(
-                text="Conta criada com sucesso.",
-                text_color="#00ff88"
-            )
-
-            self.entrada_usuario.delete(
-                0,
-                "end"
-            )
-
-            self.entrada_senha.delete(
-                0,
-                "end"
-            )
-
-        else:
-
-            self.label_status.configure(
-                text="Esse usuário já existe.",
-                text_color="#ff4444"
-            )
-
+        self.janela_conta = Criar_conta(self)
 
     def abrir_programa(self):
 
@@ -561,10 +512,7 @@ class TelaLogin(ctk.CTk):
         app.mainloop()
 
 
-
-
 if __name__ == "__main__":
 
     app = TelaLogin()
-
     app.mainloop()
