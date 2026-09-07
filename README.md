@@ -51,6 +51,19 @@ Login
   │
   ▼
 TelaLogin
+    │
+    │ usuario + senha
+    ▼
+  perfil
+    │
+    ▼
+  Usuário
+    │
+    ▼
+  Peewee
+    │
+    ▼
+ Banco SQLite
   │
   ▼
 App
@@ -61,6 +74,22 @@ App
 ```
 
 Após a autenticação, o usuário é direcionado para a aplicação principal, onde pode acessar as diferentes funcionalidades disponíveis.
+
+## Criação de Novos usuários segue a seguinte lógica
+
+```text
+
+       Nova_conta
+           │
+           ▼
+        perfil.criar_conta()
+           │
+           ▼
+        Usuário.create(...)
+           │
+           ▼
+        Banco SQLite
+ ```
 
 ## Estrutura do projeto
 
