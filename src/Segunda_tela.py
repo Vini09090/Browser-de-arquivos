@@ -9,7 +9,7 @@ class TelaSecundaria(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
 
-        self.geometry("600x580")
+        self.geometry("660x600")
         self.title("Alexandria - Anotações")
 
         self.livros = Livros()
@@ -30,8 +30,8 @@ class TelaSecundaria(ctk.CTkToplevel):
 
         self.entrada_nota = ctk.CTkTextbox(
             self,
-            width=490,
-            height=270
+            width=500,
+            height=300
         )
         self.entrada_nota.pack(pady=10)
         self.frame_botoes = ctk.CTkFrame(self, fg_color="transparent")
