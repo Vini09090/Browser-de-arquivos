@@ -4,6 +4,7 @@ from Renderizador import GerenciadorImagem
 from pathlib import Path
 from random import shuffle
 from .Nova_conta import Criar_conta
+from Dados.iniciar import perfil
 
 BASE_DIR = Path(__file__).resolve().parent
 PASTA_IMAGENS = BASE_DIR / "Imagens"
@@ -38,135 +39,18 @@ def listar_imagens(diretorio):
     return imagens
 
 
-class Keys_login:
-    """Gerencia os usuários através do arquivo usuarios.txt."""
+class Chave_acesso:
+    def __init__(self, nome: str , senha:str ):
+        self.users = perfil(nome , senha)
+        pass
 
-    def __init__(self, arquivo_usuarios=None):
-
-        if arquivo_usuarios is None:
-            arquivo_usuarios = BASE_DIR / "usuarios.txt"
-
-        self.arquivo_usuarios = Path(arquivo_usuarios)
-
-        self.criar_arquivo()
-
-    # --------------------------------------------------------
-
-    def criar_arquivo(self):
-        """Cria o arquivo de usuários caso ele não exista."""
-
-        if not self.arquivo_usuarios.exists():
-
-            with open(
-                self.arquivo_usuarios,
-                "w",
-                encoding="utf-8"
-            ) as arquivo:
-
-                arquivo.write("admin:200604\n")
-
-    # --------------------------------------------------------
-
-    def verificar_usuario(self, usuario):
-        """
-        Verifica se determinado usuário já existe.
-
-        True  -> usuário existe
-        False -> usuário não existe
-        """
-
-        usuario = usuario.strip()
-
-        with open(
-            self.arquivo_usuarios,
-            "r",
-            encoding="utf-8"
-        ) as arquivo:
-
-            for linha in arquivo:
-
-                linha = linha.strip()
-
-                if not linha:
-                    continue
-
-                try:
-                    usuario_salvo, senha_salva = linha.split(":", 1)
-
-                except ValueError:
-                    continue
-
-                usuario_salvo = usuario_salvo.strip()
-
-                if usuario == usuario_salvo:
-                    return True
-
-        return False
-
-    # --------------------------------------------------------
-
-    def verificar_login(self, usuario, senha):
-        """
-        Verifica usuário e senha.
-
-        True  -> login correto
-        False -> login incorreto
-        """
-
-        usuario = usuario.strip()
-
-        with open(
-            self.arquivo_usuarios,
-            "r",
-            encoding="utf-8"
-        ) as arquivo:
-
-            for linha in arquivo:
-
-                linha = linha.strip()
-
-                if not linha:
-                    continue
-
-                try:
-                    usuario_salvo, senha_salva = linha.split(":", 1)
-
-                except ValueError:
-                    continue
-
-                usuario_salvo = usuario_salvo.strip()
-                senha_salva = senha_salva.strip()
-
-                if (
-                    usuario == usuario_salvo
-                    and senha == senha_salva
-                ):
-                    return True
-
-        return False
-
-    # --------------------------------------------------------
-
-    def adicionar_conta(self, usuario, senha):
-        """Adiciona um novo usuário."""
-
-        usuario = usuario.strip()
-
-        if not usuario or not senha:
-            return False
-
-        if self.verificar_usuario(usuario):
-            return False
-
-        with open(
-            self.arquivo_usuarios,
-            "a",
-            encoding="utf-8"
-        ) as arquivo:
-
-            arquivo.write(f"{usuario}:{senha}\n")
-
-        return True
+    # Integração com o banco.
+    def verificacao_login(self, usuario : str, senha :str) -> str: 
+            self.users = perfil(usuario , senha)
+            if self.users.verificar() == True:
+                    return "usuário existe"
+            else:
+                    return "não existe"
 
 
 class TelaLogin(ctk.CTk):
@@ -190,12 +74,6 @@ class TelaLogin(ctk.CTk):
         self.configure(
             fg_color="#0b0b0b"
         )
-
-        # ----------------------------------------------------
-        # USUÁRIOS
-        # ----------------------------------------------------
-
-        self.confirmar_usuario = Keys_login()
 
         # ----------------------------------------------------
         # IMAGENS
@@ -455,24 +333,22 @@ class TelaLogin(ctk.CTk):
         self.fundo.lower()
 
   
+    
     def verificar_login(self):
 
         usuario = self.entrada_usuario.get().strip()
         senha = self.entrada_senha.get()
 
         if not usuario or not senha:
-
             self.label_status.configure(
                 text="Preencha usuário e senha.",
                 text_color="#ff4444"
             )
-
             return
 
-        if self.confirmar_usuario.verificar_login(
-            usuario,
-            senha
-        ):
+        pessoa = perfil(usuario, senha)
+
+        if pessoa.verificar():
 
             self.label_status.configure(
                 text="Login realizado.",
@@ -487,6 +363,7 @@ class TelaLogin(ctk.CTk):
                 text="Usuário ou senha incorretos.",
                 text_color="#ff4444"
             )
+
 
     def criar_conta(self):
         self.janela_conta = Criar_conta(self)
