@@ -1,12 +1,13 @@
 import os
 import webbrowser
 from urllib.parse import quote_plus
-
+from Fontes import BuscadorDeLivros
+import unicodedata
 
 class Pesquisa:
     EXTENSOES = (".pdf", ".epub", ".txt")
 
-    def __init__(self, pasta_livros="/home/vinicius/Biblioteca"):
+    def __init__(self, pasta_livros= '/home/vinicius'):
         self.pasta_livros = pasta_livros
         self.pesquisa = ""
         self.resultados = []
@@ -25,7 +26,7 @@ class Pesquisa:
         texto = texto.replace(" ", "")
 
         return texto
-        
+    
     def buscar_livros_locais(self, termo: str) -> list:
         termo = self.normalizar_texto(termo)
 
@@ -50,33 +51,67 @@ class Pesquisa:
 
         return resultados
 
+    
+    def pesquisa_fonte(self, titulo: str) -> list:
+        """
+        Pesquisa nas fontes online e retorna somente obras realmente
+        encontradas.
+        """
+        buscador = BuscadorDeLivros()
+        fontes = buscador.buscar_em_todas(title=titulo, limit=5)
+
+        resultados = []
+
+        for fonte in fontes:
+            if not isinstance(fonte, dict):
+                continue
+
+            nome_fonte = fonte.get("fonte", "Online")
+
+            for resultado in fonte.get("resultados", []):
+                if not isinstance(resultado, dict):
+                    continue
+
+                # Ignora fontes que não encontraram a obra.
+                if not resultado.get("encontrado", True):
+                    continue
+
+                url = resultado.get("url")
+                titulo_resultado = resultado.get("titulo")
+
+                if not url or not titulo_resultado:
+                    continue
+
+                resultados.append({
+                    "titulo": f"🌐 {nome_fonte} | {titulo_resultado}",
+                    "url": url,
+                    "fonte": nome_fonte,
+                    "autor": resultado.get("autor", []),
+                    "ano": resultado.get("ano"),
+                    "isbn": resultado.get("isbn", []),
+                    "idioma": resultado.get("idioma", []),
+                    "descricao": resultado.get("descricao"),
+                    "download": resultado.get("download")
+                })
+
+        return resultados
+
     def buscar_online(self, termo: str) -> list:
-        termo_url = quote_plus(termo)
+        # Não cria mais links genéricos de pesquisa.
+        # Retorna apenas resultados realmente encontrados.
+        return self.pesquisa_fonte(termo)
 
-        return [
-            {
-                "titulo": f"🌐 OpenLibrary | {termo}",
-                "url": f"https://openlibrary.org/search?q={termo_url}"
-            },
-            {
-                "titulo": f"🌐 Google Books | {termo}",
-                "url": f"https://books.google.com/books?q={termo_url}"
-            },
-            {
-                "titulo": f"🌐 Projeto Gutenberg | {termo}",
-                "url": f"https://www.gutenberg.org/ebooks/search/?query={termo_url}"
-            },
-            {
-                "titulo": f"🏛 MEC Domínio Público | {termo}",
-                "url": "http://www.dominiopublico.gov.br/pesquisa/"
-                       "PesquisaObraForm.jsp"
-            },
-            {
-                "titulo": f"📖 BibliON São Paulo | {termo}",
-                "url": "https://biblion.odilo.us/"
-            }
-        ]
+    
+    def busca_inteligente(self, termo : str):
+        resultados = self.pesquisa_fonte(titulo= termo)
+        for resultado in resultados:
+            if resultado == 0:
+                return f"{resultado} | Nenhum resultado."
+            else: 
+                return f"{resultado} | Total de respostas."
+        pass
 
+        
     def realizar_pesquisa(self, termo: str) -> list:
         termo = termo.strip()
 
