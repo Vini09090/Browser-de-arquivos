@@ -1,34 +1,75 @@
-// Exemplo 1 - usando vetor em C++
-// Vetor de inteiros imprimido na saida do programa
-#include <iostream>
+#ifndef FILES_H
+#define FILES_H
+
+#include <string>
 #include <vector>
 #include <filesystem>
+#include <algorithm>
+#include <cctype>
 
-
-//Criasse para comparar strings recebidas e localizadas, e retornar os resultados nos quais, eu possuo uma boa margem de acerto? 
-//Assim eu teria necessariamente uma boa forma de filtragem pois assim, eu conseguiria limitar os erros de escrita.
-using namespace std;
 namespace fs = std::filesystem;
-const string raiz = "/home/vinicius";
 
 
-std::vector<std::string> buscar_arquivos(
+
+inline std::string para_minusculas(const std::string& texto)
+{
+    std::string resultado = texto;
+
+    std::transform(
+        resultado.begin(),
+        resultado.end(),
+        resultado.begin(),
+        [](unsigned char c)
+        {
+            return static_cast<char>(std::tolower(c));
+        }
+    );
+
+    return resultado;
+}
+
+
+inline std::vector<std::string> buscar_arquivos(
     const std::string& caminho,
     const std::vector<std::string>& extensoes
-) {
+)
+{
     std::vector<std::string> resultado;
 
-    for (const auto& entry :
-         fs::recursive_directory_iterator(caminho)) {
+    if (!fs::exists(caminho) || !fs::is_directory(caminho))
+    {
+        return resultado;
+    }
 
+    for (
+        const auto& entry :
+        fs::recursive_directory_iterator(
+            caminho,
+            fs::directory_options::skip_permission_denied
+        )
+    )
+    {
         if (!entry.is_regular_file())
+        {
             continue;
+        }
 
-        std::string extensao = entry.path().extension().string();
+        std::string extensao =
+            para_minusculas(
+                entry.path().extension().string()
+            );
 
-        for (const std::string& permitida : extensoes) {
-            if (extensao == permitida) {
-                resultado.push_back(entry.path().string());
+        for (const std::string& permitida : extensoes)
+        {
+            if (
+                extensao ==
+                para_minusculas(permitida)
+            )
+            {
+                resultado.push_back(
+                    entry.path().string()
+                );
+
                 break;
             }
         }
@@ -36,41 +77,4 @@ std::vector<std::string> buscar_arquivos(
 
     return resultado;
 }
-std::vector<std::string> filtro(
-    std::string nome,
-    const std::vector<std::string>& extensoes
-) {
-    std::vector<std::string> arquivos =
-        buscar_arquivos(raiz, extensoes);
 
-    std::vector<std::string> resultado;
-
-    for (const std::string& arquivo : arquivos) {
-
-        if (arquivo.find(nome) != std::string::npos) {
-            resultado.push_back(arquivo);
-        }
-
-    }
-
-    return resultado;
-}
-
-int main() {
-
-    std::vector<std::string> extensoes{
-        ".pdf",
-        ".txt",
-        ".doc",
-        ".docx"
-    };
-
-    std::vector<std::string> resultados =
-        filtro("Cal", extensoes);
-
-    for (const std::string& arquivo : resultados) {
-        std::cout << arquivo << std::endl;
-    }
-
-    return 0;
-}
