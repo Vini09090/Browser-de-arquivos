@@ -1,235 +1,120 @@
-#include <iostream>
-#include <string>
-#include <vector>
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cstdlib>
 #include "Files.h"
 
-using namespace std;
 namespace fs = std::filesystem;
+const char* home = std::getenv("HOME");
+const std::string RAIZ = home ? home : "";
 
-vector<string> getBigrams(const string& str)
-{
-    vector<string> pairs;
 
-    string texto = str;
+const std::string RAIZ = home;
 
-    transform(
-        texto.begin(),
-        texto.end(),
-        texto.begin(),
-        [](unsigned char c)
-        {
-            return static_cast<char>(toupper(c));
-        }
+std::string normalizar_nome(std::string texto) {
+    std::string resultado;
+
+    for (unsigned char c : texto) {
+        if (std::isalnum(c))
+            resultado += static_cast<char>(std::tolower(c));
+    }
+
+    return resultado;
+}
+
+std::vector<std::string> getBigrams(const std::string& texto) {
+    std::vector<std::string> pares;
+    if (texto.size() < 2)
+        return pares;
+
+    for (std::size_t i = 0; i + 1 < texto.size(); ++i)
+        pares.push_back(texto.substr(i, 2));
+
+    return pares;
+}
+
+double calculateSimilarity(const std::string& str1, const std::string& str2) {
+    std::string a = normalizar_nome(str1);
+    std::string b = normalizar_nome(str2);
+
+    if (a.empty() || b.empty())
+        return 0.0;
+
+    if (a == b)
+        return 1.0;
+
+    if (a.size() < 2 || b.size() < 2)
+        return b.find(a) != std::string::npos ? 1.0 : 0.0;
+
+    auto bigramsA = getBigrams(a);
+    auto bigramsB = getBigrams(b);
+
+    int intersecao = 0;
+
+    for (const auto& par : bigramsA) {
+        if (std::find(bigramsB.begin(), bigramsB.end(), par) != bigramsB.end())
+            ++intersecao;
+    }
+
+    int uniao = static_cast<int>(
+        bigramsA.size() + bigramsB.size() - intersecao
     );
 
-    if (texto.length() < 2)
-    {
-        return pairs;
-    }
+    if (uniao == 0)
+        return 0.0;
 
-    for (size_t i = 0; i < texto.length() - 1; ++i)
-    {
-        pairs.push_back(
-            texto.substr(i, 2)
-        );
-    }
+    double similaridade = (2.0 * intersecao) / uniao;
 
-    return pairs;
+    if (b.find(a) != std::string::npos)
+        similaridade = std::max(similaridade, 0.80);
+
+    return similaridade;
 }
 
-// Retorno:
-// 0.0 = 0%
-// 0.5 = 50%
-// 1.0 = 100%
-
-
-double calculateSimilarity(
-    const string& str1,
-    const string& str2
-)
-{
-    vector<string> pairs1 =
-        getBigrams(str1);
-
-    vector<string> pairs2 =
-        getBigrams(str2);
-
-    if (
-        pairs1.empty() ||
-        pairs2.empty()
-    )
-    {
-        return 0.0;
-    }
-
-    int intersection = 0;
-
-    vector<string> copia = pairs2;
-
-    for (const string& pair1 : pairs1)
-    {
-        for (size_t j = 0; j < copia.size(); ++j)
-        {
-            if (pair1 == copia[j])
-            {
-                ++intersection;
-
-                copia.erase(
-                    copia.begin() + j
-                );
-
-                break;
-            }
-        }
-    }
-
-    int total =
-        pairs1.size() +
-        pairs2.size();
-
-    if (total == 0)
-    {
-        return 0.0;
-    }
-
-    return (
-        2.0 *
-        intersection
-    ) / total;
-}
-
-// Estrutura dos resultados
-
-
-struct ResultadoBusca
-{
-    string titulo;
-    string caminho;
+struct Resultado {
+    std::string caminho;
+    std::string titulo;
     double similaridade;
 };
 
-
-
-// Programa principal
-
-
-int main(int argc, char* argv[])
-{
-    // --------------------------------------------------------
-    // O Python precisa enviar o termo da pesquisa
-    // --------------------------------------------------------
-
-    if (argc < 2)
-    {
-        return 1;
-    }
-
-    string entrada = argv[1];
-
-    if (entrada.empty())
-    {
+int main(int argc, char* argv[]) {
+    if (argc < 2 || std::string(argv[1]).empty())
         return 0;
-    }
 
+    std::string termo = argv[1];
 
-
-
-    const string raiz =
-        "/home/vinicius";
-
-
-
-    vector<string> extensoes
-    {
-        ".pdf",
-        ".epub",
-        ".txt",
-        ".doc",
-        ".docx"
+    std::vector<std::string> extensoes{
+        ".pdf", ".epub", ".txt", ".doc", ".docx"
     };
 
-    // Busca os arquivos usando Files.h
- 
+    auto arquivos = buscar_arquivos(RAIZ, extensoes);
+    std::vector<Resultado> resultados;
 
-    vector<string> arquivos =
-        buscar_arquivos(
-            raiz,
-            extensoes
-        );
-
-    // Limite mínimo
-    //
-    // 0.20 = 20%
-
-
-    const double LIMITE =
-        0.20;
-
-    vector<ResultadoBusca> resultados;
-
-
-    for (const string& arquivo : arquivos)
-    {
+    for (const auto& arquivo : arquivos) {
         fs::path caminho(arquivo);
+        std::string titulo = caminho.stem().string();
 
+        double similaridade = calculateSimilarity(termo, titulo);
 
-        // Nome sem extensão
-        string nome =
-            caminho.stem().string();
-
-
-        // Calcula a similaridade
-        double similaridade =
-            calculateSimilarity(
-                entrada,
-                nome
-            );
-
-
-        if (similaridade >= LIMITE)
-        {
-            resultados.push_back(
-                {
-                    nome,
-                    arquivo,
-                    similaridade
-                }
-            );
+        // 0.20 = 20%
+        if (similaridade >= 0.20) {
+            resultados.push_back({arquivo, titulo, similaridade});
         }
     }
 
+    std::sort(resultados.begin(), resultados.end(),
+        [](const Resultado& a, const Resultado& b) {
+            return a.similaridade > b.similaridade;
+        });
 
-    sort(
-        resultados.begin(),
-        resultados.end(),
-        [](const ResultadoBusca& a,
-           const ResultadoBusca& b)
-        {
-            return
-                a.similaridade >
-                b.similaridade;
-        }
-    );
-
-
-    for (
-        const auto& resultado :
-        resultados
-    )
-    {
-        cout
-            << resultado.similaridade
-            << "|"
-            << resultado.titulo
-            << "|"
-            << resultado.caminho
-            << '\n';
+    for (const auto& resultado : resultados) {
+        std::cout << resultado.similaridade << "|"
+                  << resultado.titulo << "|"
+                  << resultado.caminho << '\n';
     }
-
 
     return 0;
 }
