@@ -3,8 +3,8 @@ import math
 import os
 import random
 import webbrowser
-from arquivos_integrado import Janela_arquivos
-
+from Janelas.arquivos_integrado import Janela_arquivos
+from pathlib import Path
 
 class TelaRedeNeural(ctk.CTkToplevel):
     def __init__(self, master=None):
@@ -103,7 +103,7 @@ class TelaRedeNeural(ctk.CTkToplevel):
 
         self.constelacao = ConstelacaoCanvas(
             self.rede_frame,
-            pasta_livros="/home/vinicius/Documentos/Biblioteca",
+            pasta_livros=  Path.home() / "Biblioteca",
             width=1100,
             height=620
         )
@@ -151,7 +151,6 @@ class TelaRedeNeural(ctk.CTkToplevel):
         )
 
     def adicionar_arquivo(self):
-        if __name__ == "__main__":
             app = Janela_arquivos(self)
             app.mainloop()
         
@@ -298,5 +297,3 @@ class ConstelacaoCanvas(ctk.CTkCanvas):
 
         self.desenhar_linhas()
         self.after(30, self.animar)
-ap = TelaRedeNeural()
-ap.mainloop()
