@@ -1,6 +1,6 @@
 # Browser de Livros
 
-O **Browser de Livros** é uma aplicação desenvolvida para facilitar a organização, localização e pesquisa de livros armazenados no computador.
+O **Alexandria** é uma aplicação desenvolvida para facilitar a organização, localização e pesquisa de livros armazenados no computador.
 
 O programa permite pesquisar livros dentro de uma determinada pasta ou em um conjunto de várias pastas, apresentando os resultados por meio de uma interface gráfica mais organizada e intuitiva.
 
@@ -60,7 +60,7 @@ TelaLogin
   Usuário
     │
     ▼
-  Peewee
+  ORM - Banco.py
     │
     ▼
  Banco SQLite
@@ -124,6 +124,7 @@ sistema_pesquisa.py
 | `app.py`              | Inicializa e organiza a aplicação principal.      |
 | `Tela_pesquisa.py`    | Interface responsável pela pesquisa de livros.    |
 | `sistema_pesquisa.py` | Contém a lógica principal do sistema de pesquisa. |
+|   `Fontes.py`         | Realiza as requisições nos domínios públicos.     |
 
 ## Download
 
