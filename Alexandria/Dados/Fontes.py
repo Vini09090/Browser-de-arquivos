@@ -2,16 +2,20 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import quote
 
-# Termos online, requisitados.
+
 class BuscadorDeLivros:
 
     def __init__(self):
+        self.TIMEOUT = 10
         self.fontes = [
             self.GoogleBooks,
             self.Gutenberg,
             self.Internet_Archive,
-            self.OpenLibary,
+            self.OpenLibrary,
             self.WikiSource,
+            self.OAPEN,
+            self.LibriVox,
+            self.DOAB
         ]
 
     def GoogleBooks(self, titulo: str, limite: int = 10) -> dict:
@@ -23,7 +27,7 @@ class BuscadorDeLivros:
         }
 
         try:
-            resposta = requests.get(URL, params=parametros, timeout=10)
+            resposta = requests.get(URL, params=parametros, timeout=self.TIMEOUT)
             resposta.raise_for_status()
             dados = resposta.json()
         except (requests.RequestException, ValueError) as erro:
@@ -68,7 +72,7 @@ class BuscadorDeLivros:
             resposta = requests.get(
                 url,
                 headers={"User-Agent": "SistemaBiblioteca/1.0"},
-                timeout=15
+                timeout=self.TIMEOUT
             )
             resposta.raise_for_status()
         except requests.RequestException as erro:
@@ -120,7 +124,7 @@ class BuscadorDeLivros:
             resposta = requests.get(
                 "https://archive.org/advancedsearch.php",
                 params=parametros,
-                timeout=15
+                timeout=self.TIMEOUT
             )
             resposta.raise_for_status()
             dados = resposta.json()
@@ -157,7 +161,7 @@ class BuscadorDeLivros:
 
         return {"fonte": "Internet Archive", "resultados": resultados}
 
-    def OpenLibary(self, titulo: str, limite: int = 10) -> dict:
+    def OpenLibrary(self, titulo: str, limite: int = 10) -> dict:
         parametros = {"title": titulo, "limit": limite}
 
         try:
@@ -165,7 +169,7 @@ class BuscadorDeLivros:
                 "https://openlibrary.org/search.json",
                 params=parametros,
                 headers={"User-Agent": "SistemaBiblioteca/1.0 (projeto educacional)"},
-                timeout=10
+                timeout=self.TIMEOUT
             )
             resposta.raise_for_status()
             dados = resposta.json()
@@ -207,7 +211,7 @@ class BuscadorDeLivros:
             resposta = requests.get(
                 "https://pt.wikisource.org/w/api.php",
                 params=parametros,
-                timeout=10
+                timeout=self.TIMEOUT
             )
             resposta.raise_for_status()
             dados = resposta.json()
@@ -230,38 +234,145 @@ class BuscadorDeLivros:
                 "isbn": [],
                 "idioma": ["pt"],
                 "descricao": None,
-                "url": "https://pt.wikisource.org/wiki/" + nome.replace(" ", "_"),
+                "url": "https://pt.wikisource.org/wiki/" + quote(nome.replace(" ", "_")),
                 "download": None,
             })
 
         return {"fonte": "Wikisource", "resultados": resultados}
 
-    def buscar_em_todas(self, title: str, limit: int = 5, headless: bool = True) -> list:
+    def OAPEN(self, titulo: str, limite: int = 10) -> dict:
+        url = "https://library.oapen.org/rest/search"
+        params = {
+            "query": titulo,
+            "expand": "metadata,bitstreams",
+            "limit": limite,
+        }
+        headers = {"Accept": "application/json"}
+
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=self.TIMEOUT)
+            resp.raise_for_status()
+            dados = resp.json()
+        except (requests.RequestException, ValueError) as e:
+            return {"fonte": "OAPEN Library", "resultados": [], "erro": str(e)}
+
+        resultados = []
+        if isinstance(dados, list):
+            for item in dados:
+                nome = item.get("name")
+                handle = item.get("handle")
+                if not nome or not handle:
+                    continue
+
+                resultados.append({
+                    "fonte": "OAPEN Library",
+                    "encontrado": True,
+                    "titulo": nome,
+                    "autor": [],
+                    "ano": None,
+                    "isbn": [],
+                    "idioma": [],
+                    "descricao": handle,
+                    "url": f"https://library.oapen.org/handle/{handle}",
+                    "download": None,
+                })
+
+        return {"fonte": "OAPEN Library", "resultados": resultados}
+
+    def LibriVox(self, titulo: str, limite: int = 10) -> dict:
+        url = "https://librivox.org/api/feed/audiobooks"
+        params = {"format": "json", "limit": limite, "title": titulo}
+
+        try:
+            resp = requests.get(url, params=params, timeout=self.TIMEOUT)
+            resp.raise_for_status()
+            dados = resp.json()
+        except (requests.RequestException, ValueError) as e:
+            return {"fonte": "LibriVox", "resultados": [], "erro": str(e)}
+
+        resultados = []
+        livros = dados.get("books", []) if isinstance(dados, dict) else []
+
+        for livro in livros:
+            nome = livro.get("title")
+            url_livro = livro.get("url_librivox")
+            if not nome or not url_livro:
+                continue
+
+            autor = f"{livro.get('author_first_name', '')} {livro.get('author_last_name', '')}".strip()
+
+            resultados.append({
+                "fonte": "LibriVox",
+                "encontrado": True,
+                "titulo": nome,
+                "autor": [autor] if autor else [],
+                "ano": livro.get("copyright_year"),
+                "isbn": [],
+                "idioma": [livro.get("language")] if livro.get("language") else [],
+                "descricao": livro.get("description"),
+                "url": url_livro,
+                "download": livro.get("url_zip_file"),
+            })
+
+        return {"fonte": "LibriVox", "resultados": resultados}
+
+    def DOAB(self, titulo: str, limite: int = 10) -> dict:
+        url = "https://directory.doabooks.org/rest/search"
+        params = {
+            "query": titulo,
+            "expand": "metadata,bitstreams",
+            "limit": limite,
+        }
+        headers = {"Accept": "application/json"}
+
+        try:
+            resp = requests.get(url, params=params, headers=headers, timeout=self.TIMEOUT)
+            resp.raise_for_status()
+            dados = resp.json()
+        except (requests.RequestException, ValueError) as e:
+            return {"fonte": "DOAB", "resultados": [], "erro": str(e)}
+
+        resultados = []
+        if isinstance(dados, list):
+            for item in dados:
+                nome = item.get("name")
+                handle = item.get("handle")
+                if not nome or not handle:
+                    continue
+
+                resultados.append({
+                    "fonte": "DOAB",
+                    "encontrado": True,
+                    "titulo": nome,
+                    "autor": [],
+                    "ano": None,
+                    "isbn": [],
+                    "idioma": [],
+                    "descricao": handle,
+                    "url": f"https://directory.doabooks.org/handle/{handle}",
+                    "download": None,
+                })
+
+        return {"fonte": "DOAB", "resultados": resultados}
+
+    def buscar_em_todas(self, titulo: str = "", limite: int = 5, title: str = None, limit: int = None) -> list:
+        termo_busca = title if title is not None else titulo
+        limite_busca = limit if limit is not None else limite
+
         resultados = []
 
         for fonte in self.fontes:
             try:
-                resultado = fonte(titulo=title, limite=limit)
+                resultado = fonte(titulo=termo_busca, limite=limite_busca)
 
                 if isinstance(resultado, dict):
                     resultados.append(resultado)
 
             except Exception as erro:
                 resultados.append({
-                    "fonte": fonte.__name__,
+                    "fonte": getattr(fonte, "__name__", "Desconhecida"),
                     "resultados": [],
                     "erro": str(erro)
                 })
 
         return resultados
-
-
-if __name__ == "__main__":
-    buscador = BuscadorDeLivros()
-    resultados = buscador.buscar_em_todas("Dom Casmurro", limit=5)
-
-    for item in resultados:
-        print(
-            f"Fonte: {item['fonte']} | "
-            f"Encontrados: {len(item.get('resultados', []))}"
-        )
