@@ -9,8 +9,7 @@
 //Assim eu teria necessariamente uma boa forma de filtragem pois assim, eu conseguiria limitar os erros de escrita.
 using namespace std;
 namespace fs = std::filesystem;
-const char* home = std::getenv("HOME");
-const std::string RAIZ = home ? home : "";
+
 
 
 std::vector<std::string> buscar_arquivos(
@@ -42,7 +41,7 @@ std::vector<std::string> filtro(
     const std::vector<std::string>& extensoes
 ) {
     std::vector<std::string> arquivos =
-        buscar_arquivos(home, extensoes);
+        buscar_arquivos(nome, extensoes);
 
     std::vector<std::string> resultado;
 
