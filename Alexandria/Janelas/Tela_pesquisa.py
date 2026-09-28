@@ -1,5 +1,7 @@
 import customtkinter as ctk
 import threading
+import os
+from pathlib import Path
 from Dados.sistema_pesquisa import Pesquisa
 from Janelas.TelaExibição import Tela_exibição
 
@@ -11,15 +13,12 @@ class TelaPesquisa(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
 
-        self.geometry("950x750")
+        self.geometry("1300x910")
         self.minsize(800, 550)
         self.title("Alexandria - Pesquisar Livros")
 
         self.pesquisa = Pesquisa()
 
-        # -----------------------------
-        # Configurações da Animação
-        # -----------------------------
         self.sidebar_aberta = True
         self.sidebar_largura_aberta = 200
         self.sidebar_largura_fechada = 60
@@ -46,9 +45,8 @@ class TelaPesquisa(ctk.CTkToplevel):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # -----------------------------
         # 1. SIDEBAR
-        # -----------------------------
+
         self.sidebar = ctk.CTkFrame(
             self,
             width=self.sidebar_largura_aberta,
@@ -58,9 +56,9 @@ class TelaPesquisa(ctk.CTkToplevel):
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_propagate(False)
 
-        # -----------------------------
+
         # 2. CONTEÚDO PRINCIPAL
-        # -----------------------------
+
         self.conteudo = ctk.CTkFrame(
             self,
             corner_radius=0,
@@ -134,9 +132,9 @@ class TelaPesquisa(ctk.CTkToplevel):
         self.botao_voltar.nome = "Voltar"
         self.botao_voltar.pack(side="bottom", fill="x", padx=6, pady=15)
 
-    # =========================================================
+
     # LÓGICA DE ANIMAÇÃO DA SIDEBAR
-    # =========================================================
+
     def alternar_sidebar(self):
         if self.animando:
             return
@@ -202,9 +200,8 @@ class TelaPesquisa(ctk.CTkToplevel):
             anchor="w"
         )
 
-    # =========================================================
     # ÁREA DE CONTEÚDO E BUSCA
-    # =========================================================
+
     def criar_conteudo(self):
         self.barra_topo = ctk.CTkFrame(
             self.conteudo,
@@ -271,6 +268,140 @@ class TelaPesquisa(ctk.CTkToplevel):
         self.label_status.grid(row=2, column=0, columnspan=2, sticky="w", pady=15)
 
         self.entrada_pesquisa.bind("<Return>", lambda event: self.realizar_pesquisa())
+
+        self.criar_biblioteca()
+
+
+    def encontrar_biblioteca(self):
+        pasta_projeto = Path(__file__).resolve().parent.parent
+        biblioteca = pasta_projeto / "Biblioteca"
+
+        if biblioteca.is_dir():
+            return biblioteca
+
+        return None
+
+    def criar_biblioteca(self):
+        self.frame_biblioteca = ctk.CTkFrame(
+            self.area,
+            corner_radius=15,
+            fg_color="#181818"
+        )
+        self.frame_biblioteca.grid(
+            row=3,
+            column=0,
+            columnspan=2,
+            sticky="nsew",
+            pady=(10, 0)
+        )
+
+        self.area.grid_rowconfigure(3, weight=1)
+
+        cabecalho = ctk.CTkFrame(
+            self.frame_biblioteca,
+            fg_color="transparent"
+        )
+        cabecalho.pack(fill="x", padx=20, pady=(15, 5))
+
+        self.titulo_biblioteca = ctk.CTkLabel(
+            cabecalho,
+            text="📚 Minha Biblioteca",
+            font=ctk.CTkFont(size=18, weight="bold")
+        )
+        self.titulo_biblioteca.pack(side="left")
+
+        self.quantidade_livros = ctk.CTkLabel(
+            cabecalho,
+            text="0 livros",
+            text_color="#aaaaaa",
+            font=ctk.CTkFont(size=13)
+        )
+        self.quantidade_livros.pack(side="right")
+
+        self.lista_livros = ctk.CTkScrollableFrame(
+            self.frame_biblioteca,
+            fg_color="transparent"
+        )
+        self.lista_livros.pack(
+            fill="both",
+            expand=True,
+            padx=10,
+            pady=(5, 10)
+        )
+
+        self.atualizar_biblioteca()
+
+    def atualizar_biblioteca(self):
+        for widget in self.lista_livros.winfo_children():
+            widget.destroy()
+
+        biblioteca = self.encontrar_biblioteca()
+
+        if biblioteca is None:
+            self.quantidade_livros.configure(text="0 livros")
+
+            ctk.CTkLabel(
+                self.lista_livros,
+                text="A pasta biblioteca ainda não existe.",
+                text_color="#888888",
+                font=("Arial", 14)
+            ).pack(pady=30)
+
+            return
+
+        extensoes = (
+            ".pdf",
+            ".epub",
+            ".txt",
+            ".doc",
+            ".docx"
+        )
+
+        livros = []
+
+        for raiz, _, arquivos in os.walk(biblioteca):
+            for arquivo in arquivos:
+                if arquivo.lower().endswith(extensoes):
+                    livros.append(Path(raiz) / arquivo)
+
+        self.quantidade_livros.configure(
+            text=f"{len(livros)} livros"
+        )
+
+        if not livros:
+            ctk.CTkLabel(
+                self.lista_livros,
+                text="Nenhum livro encontrado na biblioteca.",
+                text_color="#888888",
+                font=("Arial", 14)
+            ).pack(pady=30)
+
+            return
+
+        for livro in sorted(livros, key=lambda x: x.name.lower()):
+            self.criar_item_livro(livro)
+
+    def criar_item_livro(self, caminho):
+        item = ctk.CTkButton(
+            self.lista_livros,
+            text=f"📖  {caminho.stem}",
+            anchor="w",
+            height=45,
+            corner_radius=8,
+            fg_color="#222222",
+            hover_color="#303030",
+            font=("Arial", 14),
+            command=lambda p=caminho: self.abrir_livro(p)
+        )
+
+        item.pack(
+            fill="x",
+            padx=5,
+            pady=3
+        )
+
+    def abrir_livro(self, caminho):
+        os.system(f'xdg-open "{caminho}"')
 
     def selecionar_categoria(self, categoria):
         self.categoria_selecionada = categoria
