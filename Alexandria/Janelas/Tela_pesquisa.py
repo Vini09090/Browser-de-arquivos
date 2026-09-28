@@ -132,7 +132,6 @@ class TelaPesquisa(ctk.CTkToplevel):
         self.botao_voltar.nome = "Voltar"
         self.botao_voltar.pack(side="bottom", fill="x", padx=6, pady=15)
 
-
     # LÓGICA DE ANIMAÇÃO DA SIDEBAR
 
     def alternar_sidebar(self):
@@ -271,10 +270,8 @@ class TelaPesquisa(ctk.CTkToplevel):
 
         self.criar_biblioteca()
 
-
     def encontrar_biblioteca(self):
-        pasta_projeto = Path(__file__).resolve().parent.parent
-        biblioteca = pasta_projeto / "Biblioteca"
+        biblioteca = Path(__file__).resolve().parent.parent.parent / "Biblioteca"
 
         if biblioteca.is_dir():
             return biblioteca
@@ -335,34 +332,33 @@ class TelaPesquisa(ctk.CTkToplevel):
         for widget in self.lista_livros.winfo_children():
             widget.destroy()
 
-        biblioteca = self.encontrar_biblioteca()
+        pasta_biblioteca = os.path.expanduser("~/Biblioteca")
 
-        if biblioteca is None:
+        if not os.path.isdir(pasta_biblioteca):
             self.quantidade_livros.configure(text="0 livros")
 
             ctk.CTkLabel(
                 self.lista_livros,
-                text="A pasta biblioteca ainda não existe.",
+                text="A pasta biblioteca não foi encontrada.",
                 text_color="#888888",
                 font=("Arial", 14)
             ).pack(pady=30)
 
             return
 
-        extensoes = (
-            ".pdf",
-            ".epub",
-            ".txt",
-            ".doc",
-            ".docx"
-        )
+        arquivos = [
+            arquivo
+            for arquivo in os.listdir(pasta_biblioteca)
+            if os.path.isfile(os.path.join(pasta_biblioteca, arquivo))
+        ]
 
-        livros = []
+        extensoes = (".pdf", ".epub", ".txt", ".doc", ".docx")
 
-        for raiz, _, arquivos in os.walk(biblioteca):
-            for arquivo in arquivos:
-                if arquivo.lower().endswith(extensoes):
-                    livros.append(Path(raiz) / arquivo)
+        livros = [
+            arquivo
+            for arquivo in arquivos
+            if arquivo.lower().endswith(extensoes)
+        ]
 
         self.quantidade_livros.configure(
             text=f"{len(livros)} livros"
@@ -378,13 +374,14 @@ class TelaPesquisa(ctk.CTkToplevel):
 
             return
 
-        for livro in sorted(livros, key=lambda x: x.name.lower()):
-            self.criar_item_livro(livro)
-
+        for livro in sorted(livros, key=str.lower):
+            caminho = os.path.join(pasta_biblioteca, livro)
+            self.criar_item_livro(caminho)
+      
     def criar_item_livro(self, caminho):
         item = ctk.CTkButton(
             self.lista_livros,
-            text=f"📖  {caminho.stem}",
+            text=f"📖  {os.path.splitext(os.path.basename(caminho))[0]}",
             anchor="w",
             height=45,
             corner_radius=8,
@@ -453,3 +450,4 @@ if __name__ == "__main__":
     app.withdraw()
     tela = TelaPesquisa()
     tela.mainloop()
+
