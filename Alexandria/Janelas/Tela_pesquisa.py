@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from Dados.sistema_pesquisa import Pesquisa
 from Janelas.TelaExibição import Tela_exibição
+from Renderizador import GerenciadorImagem
 
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
@@ -126,7 +127,8 @@ class TelaPesquisa(ctk.CTkToplevel):
             fg_color="transparent",
             hover_color="#292929",
             font=ctk.CTkFont(size=14),
-            command=self.destroy
+            command=self.destroy, 
+            #Icone = Gerenciador.Criar_icone()
         )
         self.botao_voltar.icone = "←"
         self.botao_voltar.nome = "Voltar"
@@ -246,15 +248,16 @@ class TelaPesquisa(ctk.CTkToplevel):
 
         self.botao_pesquisar = ctk.CTkButton(
             self.area_pesquisa,
-            text="Pesquisar",
-            width=135,
-            height=50,
+            text="",
+            width=48,
+            height=28,
             corner_radius=15,
             command=self.realizar_pesquisa,
-            fg_color="#003AA3",
+            fg_color="white",
             hover_color="#4AAE22",
             font=("Arial", 15, "bold"),
-            text_color="#EBE5E5"
+            text_color="#EBE5E5", 
+            image = GerenciadorImagem.Criar_icone("/home/vinicius/Alexandria1.0/icons/Pesquisa.png") 
         )
         self.botao_pesquisar.grid(row=0, column=1)
 
@@ -311,7 +314,7 @@ class TelaPesquisa(ctk.CTkToplevel):
             cabecalho,
             text="0 livros",
             text_color="#aaaaaa",
-            font=ctk.CTkFont(size=13)
+            font=ctk.CTkFont(size=16)
         )
         self.quantidade_livros.pack(side="right")
 
