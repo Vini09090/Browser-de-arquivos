@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tema import definir_tema, alternar_tema, obter_tema
+from Renderizador import GerenciadorImagem
 
 ctk.set_default_color_theme("blue")
 
@@ -68,13 +69,15 @@ class TelaConfiguracoes(ctk.CTkToplevel):
 
         self.botao_voltar = ctk.CTkButton(
             self.sidebar,
-            text="←  Voltar",
+            text="",
             anchor="w",
-            height=42,
+            height=38,
             fg_color="transparent",
             hover_color="#292929",
             font=ctk.CTkFont(size=14),
-            command=self.destroy
+            command=self.destroy,
+            image=GerenciadorImagem.Criar_icone("/home/vinicius/Alexandria1.0/icons/voltar.png")
+
         )
         self.botao_voltar.pack(side="bottom", fill="x", padx=10, pady=15)
 
