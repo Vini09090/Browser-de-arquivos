@@ -1,9 +1,15 @@
+import sys
+from pathlib import Path
+
+# Adiciona a pasta raiz (Alexandria1.0) ao caminho de busca do Python
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 import customtkinter as ctk
 from app import App
-from Renderizador import GerenciadorImagem
+from Janelas.Renderizador import GerenciadorImagem
 from pathlib import Path
-from random import shuffle
-from .Nova_conta import Criar_conta
+
+from Janelas.Nova_conta import Criar_conta
 from Dados.iniciar import perfil
 
 
@@ -31,7 +37,7 @@ class TelaLogin(ctk.CTk):
         super().__init__()
 
 
-        self.geometry("1150x790")
+        self.geometry("1300x900")
         self.minsize(900, 650)
         self.title("Alexandria - Login")
         self.resizable(True, True)
