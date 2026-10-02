@@ -1,26 +1,23 @@
-
 from pathlib import Path
 import subprocess
 import sys
+from Dados.Configurações import Configuracoes
+
 
 BASE_DIR = Path(__file__).resolve().parent
 PASTA_USUARIO = BASE_DIR.parent
 PASTA_BIBLIOTECA = PASTA_USUARIO / "Biblioteca"
 
-CATEGORIAS = [
-    "Matematica",
-    "Literatura",
-    "Historia",
-    "Programacao",
-    "Filosofia",
-    "Ciencia"
-]
+
+configuracoes = Configuracoes()
 
 
 def verificar_biblioteca():
     PASTA_BIBLIOTECA.mkdir(parents=True, exist_ok=True)
 
-    for categoria in CATEGORIAS:
+    categorias = configuracoes.obter_categorias()
+
+    for categoria in categorias:
         pasta = PASTA_BIBLIOTECA / categoria
 
         if not pasta.exists():
