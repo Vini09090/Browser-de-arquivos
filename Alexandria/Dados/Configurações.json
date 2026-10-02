@@ -1,0 +1,13 @@
+{
+    "tema": "Dark",
+    "idioma": "pt-br",
+    "animacoes": true,
+    "categorias": [
+        "Romance",
+        "Matemática",
+        "Programação",
+        "História",
+        "Filosofia",
+        "Ciência"
+    ]
+}
