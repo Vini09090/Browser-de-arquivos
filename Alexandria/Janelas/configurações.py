@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tema import definir_tema, alternar_tema, obter_tema
 from Renderizador import GerenciadorImagem
+from Dados.Configurações import Configuracoes
 
 
 ctk.set_default_color_theme("blue")
@@ -10,7 +11,10 @@ class TelaConfiguracoes(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
 
-        definir_tema(obter_tema())
+        self.configuracoes = Configuracoes()
+
+        tema_salvo = self.configuracoes.obter_tema()
+        definir_tema(tema_salvo)
 
         self.title("Alexandria - Configurações")
         self.geometry("950x650")
@@ -79,6 +83,12 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             self.mostrar_aparencia
         )
 
+        self.botao_categorias = self.criar_item(
+            "▤",
+            "Categorias",
+            self.mostrar_categorias
+        )
+
         self.botao_informacoes = self.criar_item(
             "ⓘ",
             "Informações",
@@ -99,7 +109,6 @@ class TelaConfiguracoes(ctk.CTkToplevel):
                 "/home/vinicius/Alexandria1.0/icons/voltar.png"
             )
         )
-
         self.botao_voltar.pack(
             side="bottom",
             fill="x",
@@ -120,13 +129,11 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             font=ctk.CTkFont(size=14),
             command=comando
         )
-
         botao.pack(
             fill="x",
             padx=8,
             pady=3
         )
-
         return botao
 
     def criar_conteudo(self):
@@ -136,13 +143,11 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             corner_radius=0,
             fg_color=("#F5F5F5", "#161616")
         )
-
         self.barra_topo.grid(
             row=0,
             column=0,
             sticky="ew"
         )
-
         self.barra_topo.grid_propagate(False)
 
         self.titulo = ctk.CTkLabel(
@@ -151,7 +156,6 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             font=ctk.CTkFont(size=22, weight="bold"),
             text_color=("#222222", "#55EB19")
         )
-
         self.titulo.pack(
             side="left",
             padx=25
@@ -161,7 +165,6 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             self.conteudo,
             fg_color="transparent"
         )
-
         self.area.grid(
             row=1,
             column=0,
@@ -169,7 +172,6 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             padx=35,
             pady=30
         )
-
         self.area.grid_columnconfigure(0, weight=1)
 
     def limpar_area(self):
@@ -209,14 +211,12 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             corner_radius=12,
             fg_color=("#F0F0F0", "#191919")
         )
-
         cartao.grid(
             row=2,
             column=0,
             sticky="ew",
             pady=8
         )
-
         cartao.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
@@ -237,7 +237,6 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             text=self.texto_tema(),
             text_color=("#555555", "#5EC336")
         )
-
         self.label_tema.grid(
             row=1,
             column=0,
@@ -254,13 +253,176 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             corner_radius=8,
             command=self.mudar_tema
         )
-
         self.botao_tema.grid(
             row=0,
             column=1,
             rowspan=2,
             padx=20
         )
+
+    def mostrar_categorias(self):
+        self.limpar_area()
+        self.selecionar_item(self.botao_categorias)
+
+        ctk.CTkLabel(
+            self.area,
+            text="Categorias",
+            font=ctk.CTkFont(size=28, weight="bold"),
+            text_color=("#222222", "#55EB19")
+        ).grid(
+            row=0,
+            column=0,
+            sticky="w",
+            pady=(5, 8)
+        )
+
+        ctk.CTkLabel(
+            self.area,
+            text="Organize as categorias utilizadas pelo Alexandria.",
+            font=ctk.CTkFont(size=14),
+            text_color=("#555555", "#55EB19")
+        ).grid(
+            row=1,
+            column=0,
+            sticky="w",
+            pady=(0, 20)
+        )
+
+        cartao = ctk.CTkFrame(
+            self.area,
+            corner_radius=12,
+            fg_color=("#F0F0F0", "#191919")
+        )
+        cartao.grid(
+            row=2,
+            column=0,
+            sticky="nsew",
+            pady=8
+        )
+
+        self.area.grid_rowconfigure(2, weight=1)
+        cartao.grid_columnconfigure(0, weight=1)
+        cartao.grid_rowconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            cartao,
+            text="Categorias disponíveis",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=("#222222", "#5EC336")
+        ).grid(
+            row=0,
+            column=0,
+            sticky="w",
+            padx=20,
+            pady=(18, 10)
+        )
+
+        self.lista_categorias = ctk.CTkScrollableFrame(
+            cartao,
+            fg_color="transparent"
+        )
+        self.lista_categorias.grid(
+            row=1,
+            column=0,
+            sticky="nsew",
+            padx=12,
+            pady=(0, 10)
+        )
+
+        barra = ctk.CTkFrame(
+            cartao,
+            fg_color="transparent"
+        )
+        barra.grid(
+            row=2,
+            column=0,
+            sticky="ew",
+            padx=15,
+            pady=(5, 15)
+        )
+        barra.grid_columnconfigure(0, weight=1)
+
+        self.entrada_categoria = ctk.CTkEntry(
+            barra,
+            height=38,
+            placeholder_text="Nova categoria"
+        )
+        self.entrada_categoria.grid(
+            row=0,
+            column=0,
+            sticky="ew",
+            padx=(0, 8)
+        )
+
+        ctk.CTkButton(
+            barra,
+            text="Adicionar",
+            width=110,
+            height=38,
+            command=self.adicionar_categoria
+        ).grid(
+            row=0,
+            column=1
+        )
+
+        self.atualizar_lista_categorias()
+
+    def atualizar_lista_categorias(self):
+        for widget in self.lista_categorias.winfo_children():
+            widget.destroy()
+
+        categorias = self.configuracoes.obter_categorias()
+
+        for indice, categoria in enumerate(categorias):
+            linha = ctk.CTkFrame(
+                self.lista_categorias,
+                corner_radius=8,
+                fg_color=("#E7E7E7", "#242424")
+            )
+            linha.pack(
+                fill="x",
+                pady=3
+            )
+
+            ctk.CTkLabel(
+                linha,
+                text=categoria,
+                anchor="w",
+                font=ctk.CTkFont(size=14)
+            ).pack(
+                side="left",
+                fill="x",
+                expand=True,
+                padx=12,
+                pady=8
+            )
+
+            ctk.CTkButton(
+                linha,
+                text="Remover",
+                width=85,
+                height=30,
+                command=lambda nome=categoria: self.remover_categoria(nome)
+            ).pack(
+                side="right",
+                padx=8
+            )
+
+    def adicionar_categoria(self):
+        categoria = self.entrada_categoria.get().strip()
+
+        if not categoria:
+            return
+
+        if categoria not in self.configuracoes.obter_categorias():
+            self.configuracoes.adicionar_categoria(categoria)
+
+        self.entrada_categoria.delete(0, "end")
+        self.atualizar_lista_categorias()
+
+    def remover_categoria(self, categoria):
+        self.configuracoes.remover_categoria(categoria)
+        self.atualizar_lista_categorias()
 
     def mostrar_informacoes(self):
         self.limpar_area()
@@ -352,6 +514,7 @@ class TelaConfiguracoes(ctk.CTkToplevel):
     def selecionar_item(self, selecionado):
         for botao in (
             self.botao_aparencia,
+            self.botao_categorias,
             self.botao_informacoes
         ):
             botao.configure(
@@ -379,6 +542,9 @@ class TelaConfiguracoes(ctk.CTkToplevel):
     def mudar_tema(self):
         alternar_tema()
 
+        tema_atual = obter_tema()
+        self.configuracoes.definir_tema(tema_atual)
+
         self.label_tema.configure(
             text=self.texto_tema()
         )
@@ -393,6 +559,7 @@ class TelaConfiguracoes(ctk.CTkToplevel):
             self.titulo_sidebar.pack_forget()
 
             self.botao_aparencia.configure(text="◐")
+            self.botao_categorias.configure(text="▤")
             self.botao_informacoes.configure(text="ⓘ")
             self.botao_voltar.configure(text="←")
 
@@ -412,6 +579,10 @@ class TelaConfiguracoes(ctk.CTkToplevel):
 
             self.botao_aparencia.configure(
                 text="◐   Aparência"
+            )
+
+            self.botao_categorias.configure(
+                text="▤   Categorias"
             )
 
             self.botao_informacoes.configure(
