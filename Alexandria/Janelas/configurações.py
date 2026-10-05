@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tema import definir_tema, alternar_tema, obter_tema
+from Janelas.tema import definir_tema, alternar_tema, obter_tema
 from Renderizador import GerenciadorImagem
 from Dados.Configurações import Configuracoes
 
