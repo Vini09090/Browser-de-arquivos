@@ -1,13 +1,14 @@
 from peewee import *
 import os
 
+
 def verificar_pasta(nome :str):
     if os.path.exists(nome):
         return True
     else:
         return False
 
-db = SqliteDatabase("Alexandria.db")
+db = SqliteDatabase("Dados/Alexandria.db")
 
 class Usuário(Model):
     nome = CharField(unique=True)
