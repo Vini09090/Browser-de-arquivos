@@ -1,7 +1,6 @@
 from .banco import db, Usuário
 
 #Criando as tabelas do banco de dados.
-
 db.connect()
 db.create_tables([Usuário])
 
@@ -21,10 +20,13 @@ class perfil:
             return False
 
     def verificar(self) -> bool:
-        usuario = Usuário.get_or_none(
-            (Usuário.nome == self.nome) &
-            (Usuário.password == self.senha)
-        )
+        if not db.table_exists(Usuário):
+            db.create_tables([Usuário])
+
+        else:
+            usuario = Usuário.get_or_none(
+                (Usuário.nome == self.nome) &
+                (Usuário.password == self.senha)
+            )
 
         return usuario is not None
-    
