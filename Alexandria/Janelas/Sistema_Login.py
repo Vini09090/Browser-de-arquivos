@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import customtkinter as ctk
-from app import App
+from Janelas.app import App
 from Janelas.Renderizador import GerenciadorImagem
 from pathlib import Path
 
