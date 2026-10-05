@@ -5,7 +5,7 @@ from pathlib import Path
 from Dados.sistema_pesquisa import Pesquisa
 from Janelas.TelaExibição import Tela_exibição
 from Renderizador import GerenciadorImagem
-from tema import definir_tema, obter_tema
+from Janela.tema import definir_tema, obter_tema
 
 
 ctk.set_default_color_theme("blue")
