@@ -1,8 +1,7 @@
-from .banco import db, Usuário
+from .banco import db, Usuário , iniciar_banco
 
 #Criando as tabelas do banco de dados.
-db.connect()
-db.create_tables([Usuário])
+iniciar_banco()
 
 class perfil:
     def __init__(self, nome, senha):
